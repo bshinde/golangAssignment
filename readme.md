@@ -1,6 +1,6 @@
 To run this aplication flow the below steps 
 # Clone the repository
-git clone https://github.com/yourusername/golangAssignment.git
+git clone git@github.com:bshinde/golangAssignment.git
 
 # Navigate to the project directory
 cd golangAssignment
