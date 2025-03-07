@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Set IMDSv2 to be used
+echo "Enforcing IMDSv2"
+echo 2 > /sys/module/config/parameters/metadata_service_token_required
+
+# Variables
+INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $(curl -s --request PUT http://169.254.169.254/latest/api/token)" http://169.254.169.254/latest/meta-data/instance-id)  # Get the Instance ID using IMDSv2
+SECURITY_GROUP_ID=<your-security-group-id>  # Specify your security group ID
+SUBNET_ID=<your-subnet-id>  # Specify your subnet ID
+NETWORK_INTERFACE_NAME="eni-$(date +%s)"  # Name for the network interface (optional)
+
+# Step 1: Create a network interface
+NETWORK_INTERFACE_ID=$(aws ec2 create-network-interface \
+  --subnet-id $SUBNET_ID \
+  --groups $SECURITY_GROUP_ID \
+  --description "Network Interface with custom label" \
+  --tag-specifications "ResourceType=network-interface,Tags=[{Key=Name,Value=$NETWORK_INTERFACE_NAME}]" \
+  --query 'NetworkInterface.NetworkInterfaceId' \
+  --output text)
+
+# Step 2: Attach the network interface to the instance
+aws ec2 attach-network-interface \
+  --instance-id $INSTANCE_ID \
+  --network-interface-id $NETWORK_INTERFACE_ID \
+  --device-index 1  # Index 1 is usually used for the second network interface, change if needed.
+
+echo "Network Interface $NETWORK_INTERFACE_ID created and attached to instance $INSTANCE_ID"
